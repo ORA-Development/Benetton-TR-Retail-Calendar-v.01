@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Benetton TR — Retail Campaign Calendar</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:#FFFFFF; --surface:#F7F7F5; --surface2:#EFEFEC;
+    --border:#E0DDD8; --border-light:#EDEBE6;
+    --text:#1A1A1A; --text-muted:#6B6860; --text-dim:#ABABAB;
+    --green:#008860; --green-light:#E6F4EF;
+    --cati:#E63329;    --cati-bg:#FEF0EF;
+    --marka:#C8860A;   --marka-bg:#FEF7E6;
+    --churn:#007A6E;   --churn-bg:#E6F5F3;
+    --urun:#3A8A2A;    --urun-bg:#EEF7EC;
+    --dijital:#0057A8; --dijital-bg:#E6EFF9;
+    --onday:#6D3DB5;   --onday-bg:#F2ECFB;
+    --mp:#C05F10;      --mp-bg:#FDF0E6;
+    --tatil:#7A7368;   --tatil-bg:#F5F3F0;
+    --dini:#7B2D9C;    --dini-bg:#F6EDF9;
+    --ekinoks:#007575; --ekinoks-bg:#E6F4F4;
+    --rakip-zone:rgba(230,51,41,0.06); --rakip-zone-border:rgba(230,51,41,0.22);
+    --rakip012-zone:rgba(192,95,16,0.06); --rakip012-zone-border:rgba(192,95,16,0.25);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;min-height:100vh;}
+
+  /* HEADER */
+  .header{padding:14px 28px;border-bottom:2px solid var(--green);display:flex;align-items:center;gap:16px;flex-wrap:wrap;position:sticky;top:0;background:var(--bg);z-index:200;}
+  .logo-badge{background:var(--green);color:#fff;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:5px 10px;border-radius:3px;white-space:nowrap;}
+  .header-title{font-size:14px;font-weight:600;letter-spacing:-0.01em;}
+  .header-sub{font-size:11px;color:var(--text-muted);margin-top:1px;}
+  .header-controls{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap;}
+  select,button{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:6px 12px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.15s;}
+  select:hover,button:hover{border-color:#999;background:var(--surface);}
+  .btn-export{background:var(--green);border-color:var(--green);color:#fff;font-weight:600;}
+  .btn-export:hover{background:#006B4D;border-color:#006B4D;}
+  .btn-add{background:var(--cati);border-color:var(--cati);color:#fff;font-weight:600;}
+  .btn-add:hover{background:#c0281f;border-color:#c0281f;}
+  .btn-reset{background:var(--surface);border-color:var(--border);color:var(--text-muted);font-size:11px;}
+  .btn-share{background:#0057A8;border-color:#0057A8;color:#fff;font-weight:600;}
+  .btn-share:hover{background:#004080;border-color:#004080;}
+  .btn-import{background:var(--surface);border-color:var(--border);color:var(--text-muted);font-weight:500;}
+  .btn-import:hover{border-color:#0057A8;color:#0057A8;}
+  #importFileInput{display:none;}
+
+  /* LEGEND */
+  .legend{padding:8px 28px;border-bottom:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;background:var(--surface);}
+  .legend-label{font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);font-weight:600;}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);cursor:pointer;user-select:none;transition:color 0.15s;}
+  .legend-item:hover{color:var(--text);}
+  .legend-item.hidden{opacity:0.35;}
+  .legend-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+  .legend-divider{width:1px;height:16px;background:var(--border);margin:0 2px;}
+  .faz-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);}
+  .faz-swatch{width:16px;height:6px;border-radius:2px;}
+
+  /* QUARTER */
+  .quarter-section{margin:0;}
+  .quarter-header{padding:8px 28px;background:var(--surface2);border-bottom:1px solid var(--border);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;position:sticky;top:53px;z-index:150;}
+  .quarter-label{background:var(--green);color:#fff;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:3px 8px;border-radius:3px;}
+  .quarter-dates{font-size:11px;color:var(--text-muted);}
+  .quarter-weeks{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-dim);margin-left:auto;}
+
+  /* CALENDAR */
+  .calendar-scroll{overflow-x:auto;padding:0 28px 24px;}
+  .weeks-row{display:flex;gap:5px;padding:12px 0 6px;min-width:max-content;}
+  .week-col{width:156px;flex-shrink:0;background:var(--bg);border:1px solid var(--border);border-radius:7px;overflow:hidden;transition:border-color 0.15s,box-shadow 0.15s;cursor:default;}
+  .week-col:hover{border-color:var(--green);box-shadow:0 0 0 1px rgba(0,136,96,0.15);}
+  .week-col.danger-zone{background:var(--rakip-zone);border-color:var(--rakip-zone-border);}
+  .week-col.danger-zone .week-head{background:rgba(230,51,41,0.05);}
+  .week-col.danger-zone-012{background:var(--rakip012-zone);border-color:var(--rakip012-zone-border);}
+  .week-col.danger-zone-012 .week-head{background:rgba(192,95,16,0.05);}
+  .week-col.danger-zone.danger-zone-012{background:linear-gradient(135deg,var(--rakip-zone) 50%,var(--rakip012-zone) 50%);border-color:var(--rakip-zone-border);}
+  .week-head{padding:6px 8px 5px;background:var(--surface);border-bottom:1px solid var(--border-light);}
+  .week-num{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:0.05em;}
+  .week-dates{font-size:10px;font-weight:500;color:var(--text-muted);margin-top:1px;}
+  .danger-badge{font-size:8px;color:var(--cati);font-family:'DM Mono',monospace;margin-top:2px;line-height:1.3;}
+  .danger-badge-012{font-size:8px;color:var(--mp);font-family:'DM Mono',monospace;margin-top:1px;line-height:1.3;}
+  .week-body{padding:5px 5px 6px;display:flex;flex-direction:column;gap:2px;min-height:56px;}
+  .empty-week{color:var(--text-dim);font-size:10px;padding:3px 5px;}
+
+  /* EVENT PILLS */
+  .event{border-radius:3px;padding:3px 6px;font-size:10px;font-weight:500;line-height:1.3;display:flex;align-items:flex-start;gap:3px;cursor:pointer;transition:filter 0.15s;}
+  .event:hover{filter:brightness(0.92);}
+  .event.hidden-layer{display:none;}
+  .event-dot{width:5px;height:5px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+  .ev-cati   {background:var(--cati-bg);   color:var(--cati);}
+  .ev-marka  {background:var(--marka-bg);  color:var(--marka);}
+  .ev-churn  {background:var(--churn-bg);  color:var(--churn);}
+  .ev-urun   {background:var(--urun-bg);   color:var(--urun);}
+  .ev-dijital{background:var(--dijital-bg);color:var(--dijital);}
+  .ev-onday  {background:var(--onday-bg);  color:var(--onday);}
+  .ev-mp     {background:var(--mp-bg);     color:var(--mp);}
+  .ev-tatil  {background:var(--tatil-bg);  color:var(--tatil);}
+  .ev-dini   {background:var(--dini-bg);   color:var(--dini);}
+  .ev-ekinoks{background:var(--ekinoks-bg);color:var(--ekinoks);}
+
+  /* FAZ BAR + LABELS */
+  .faz-bar{display:flex;gap:2px;margin-bottom:3px;border-radius:2px;overflow:hidden;height:3px;}
+  .faz-segment{height:3px;flex:1;}
+  .faz-prep    {background:rgba(230,51,41,0.25);}  .faz-prep-m    {background:rgba(200,134,10,0.25);}
+  .faz-launch  {background:rgba(230,51,41,0.55);}  .faz-launch-m  {background:rgba(200,134,10,0.55);}
+  .faz-peak    {background:#E63329;}                .faz-peak-m    {background:#C8860A;}
+  .faz-closing {background:rgba(230,51,41,0.28);}  .faz-closing-m {background:rgba(200,134,10,0.28);}
+  .faz-label{font-size:9px;font-family:'DM Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;padding:1px 5px;border-radius:3px;margin-right:2px;display:inline-block;white-space:nowrap;}
+  .faz-label.prep    {background:rgba(230,51,41,0.12);color:rgba(180,30,20,0.8);}
+  .faz-label.launch  {background:rgba(230,51,41,0.20);color:rgba(180,30,20,0.95);}
+  .faz-label.peak    {background:rgba(230,51,41,0.15);color:#E63329;font-weight:700;border:1px solid rgba(230,51,41,0.2);}
+  .faz-label.closing {background:rgba(230,51,41,0.10);color:rgba(180,30,20,0.7);}
+  .faz-label.prep-m  {background:rgba(200,134,10,0.12);color:rgba(150,95,0,0.8);}
+  .faz-label.launch-m{background:rgba(200,134,10,0.20);color:rgba(150,95,0,0.95);}
+  .faz-label.peak-m  {background:rgba(200,134,10,0.15);color:#C8860A;font-weight:700;border:1px solid rgba(200,134,10,0.2);}
+  .faz-label.closing-m{background:rgba(200,134,10,0.10);color:rgba(150,95,0,0.7);}
+
+  /* HOVER TOOLTIP */
+  .htip{display:none;position:fixed;z-index:9999;background:#fff;border:1px solid var(--border);border-top:3px solid var(--green);border-radius:8px;padding:13px 15px;width:310px;box-shadow:0 8px 28px rgba(0,0,0,0.13);pointer-events:none;max-height:80vh;overflow-y:auto;}
+  .htip.visible{display:block;}
+  .htip-week{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-dim);letter-spacing:0.12em;margin-bottom:7px;text-transform:uppercase;}
+  .htip-section-title{font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;}
+  .htip-event{margin-bottom:6px;padding:7px 9px;border-radius:5px;border-left:3px solid currentColor;}
+  .htip-event-name{font-size:11px;font-weight:700;margin-bottom:2px;}
+  .htip-event-note{font-size:10px;color:#555;line-height:1.5;margin-bottom:2px;}
+  .htip-event-dates{font-size:9px;color:var(--text-dim);font-family:'DM Mono',monospace;margin-top:4px;line-height:1.7;border-top:1px solid var(--border-light);padding-top:4px;}
+  .htip-divider{height:1px;background:var(--border);margin:7px 0;}
+  .htip-zone{font-size:10px;padding:4px 8px;border-radius:4px;margin-top:3px;font-weight:500;}
+  .htip-zone.red{background:var(--cati-bg);color:var(--cati);}
+  .htip-zone.orange{background:var(--mp-bg);color:var(--mp);}
+  .htip-simple{display:flex;align-items:flex-start;gap:5px;font-size:10px;padding:2px 0;color:var(--text-muted);}
+  .htip-dot{width:5px;height:5px;border-radius:50%;margin-top:3px;flex-shrink:0;}
+  .htip-edit-hint{font-size:10px;color:var(--green);margin-top:6px;padding-top:6px;border-top:1px solid var(--border-light);text-align:center;}
+
+  /* ─── EDIT PANEL ───────────────────────────── */
+  .panel-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.18);z-index:300;backdrop-filter:blur(2px);}
+  .panel-overlay.open{display:block;}
+  .edit-panel{
+    position:fixed;top:0;right:0;height:100vh;width:480px;max-width:95vw;
+    background:#fff;border-left:1px solid var(--border);
+    box-shadow:-8px 0 32px rgba(0,0,0,0.12);
+    z-index:301;display:flex;flex-direction:column;
+    transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .edit-panel.open{transform:translateX(0);}
+
+  .panel-header{
+    padding:16px 20px;border-bottom:2px solid var(--green);
+    display:flex;align-items:center;gap:12px;flex-shrink:0;
+  }
+  .panel-header-title{font-size:14px;font-weight:700;flex:1;}
+  .panel-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-muted);padding:0 4px;line-height:1;}
+  .panel-close:hover{color:var(--text);}
+
+  .panel-body{flex:1;overflow-y:auto;padding:20px;}
+  .panel-body::-webkit-scrollbar{width:4px;}
+  .panel-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+  .form-section{margin-bottom:20px;}
+  .form-section-title{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border-light);}
+  .form-row{margin-bottom:12px;}
+  .form-label{font-size:11px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:4px;}
+  .form-input,.form-select,.form-textarea{
+    width:100%;border:1px solid var(--border);border-radius:5px;
+    padding:8px 10px;font-size:12px;font-family:'Inter',sans-serif;
+    color:var(--text);background:var(--bg);transition:border-color 0.15s;
+  }
+  .form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 2px rgba(0,136,96,0.12);}
+  .form-textarea{resize:vertical;min-height:72px;line-height:1.5;}
+  .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .form-hint{font-size:10px;color:var(--text-dim);margin-top:3px;}
+
+  /* Faz date grid */
+  .faz-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+  .faz-item{}
+  .faz-item-label{font-size:10px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
+  .faz-dot{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .faz-item input{width:100%;border:1px solid var(--border);border-radius:4px;padding:6px 8px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text);}
+  .faz-item input:focus{outline:none;border-color:var(--green);}
+
+  .panel-footer{
+    padding:14px 20px;border-top:1px solid var(--border);
+    display:flex;align-items:center;gap:10px;flex-shrink:0;background:var(--surface);
+  }
+  .btn-save{background:var(--green);color:#fff;border-color:var(--green);font-weight:700;padding:9px 20px;flex:1;}
+  .btn-save:hover{background:#006B4D;}
+  .btn-delete{background:#fff;color:var(--cati);border-color:var(--cati);font-size:12px;padding:9px 14px;}
+  .btn-delete:hover{background:var(--cati-bg);}
+  .btn-cancel{background:var(--surface);color:var(--text-muted);border-color:var(--border);font-size:12px;padding:9px 14px;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A1A;color:#fff;padding:10px 20px;border-radius:8px;font-size:12px;font-weight:500;opacity:0;transition:all 0.25s;z-index:500;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.green{background:var(--green);}
+  .toast.red{background:var(--cati);}
+
+  /* SCROLLBAR */
+  .calendar-scroll::-webkit-scrollbar{height:5px;}
+  .calendar-scroll::-webkit-scrollbar-track{background:var(--surface);}
+  .calendar-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+  .summary-bar{padding:9px 28px;border-top:1px solid var(--border);display:flex;gap:20px;flex-wrap:wrap;background:var(--surface);}
+  .summary-item{font-size:11px;color:var(--text-muted);}
+  .summary-item strong{color:var(--text);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="logo-badge">United Colors of Benetton</div>
+    <div>
+      <div class="header-title">NRF 4-5-4 Retail Campaign Calendar</div>
+      <div class="header-sub">Turkey CRM Growth Planning Tool</div>
+    </div>
+  </div>
+  <div class="header-controls">
+    <select id="yearSelect" onchange="renderCalendar()">
+      <option value="2025">2025</option>
+      <option value="2026" selected>2026</option>
+      <option value="2027">2027</option>
+    </select>
+    <select id="quarterFilter" onchange="renderCalendar()">
+      <option value="all">Tüm Çeyrekler</option>
+      <option value="1">Q1</option><option value="2">Q2</option>
+      <option value="3">Q3</option><option value="4">Q4</option>
+    </select>
+    <button class="btn-add" onclick="openPanelNew()">+ Kampanya Ekle</button>
+    <button class="btn-export" onclick="exportXLSX()">⬇ Excel</button>
+    <button class="btn-share" onclick="exportJSON()" title="Veriyi JSON olarak indir, ekiple paylaş">⬆ Paylaş</button>
+    <button class="btn-import" onclick="document.getElementById('importFileInput').click()" title="Başkasının gönderdiği JSON dosyasını yükle">⬇ Yükle</button>
+    <input type="file" id="importFileInput" accept=".json" onchange="importJSON(event)">
+    <button class="btn-reset" onclick="resetData()" title="Varsayilan verilere don">↺ Sıfırla</button>
+  </div>
+</div>
+
+<div class="legend">
+  <span class="legend-label">Katmanlar</span>
+  <div class="legend-item" data-layer="cati"    onclick="toggleLayer('cati',this)">   <div class="legend-dot" style="background:var(--cati)"></div>Çatı</div>
+  <div class="legend-item" data-layer="marka"   onclick="toggleLayer('marka',this)">  <div class="legend-dot" style="background:var(--marka)"></div>Marka</div>
+  <div class="legend-item" data-layer="churn"   onclick="toggleLayer('churn',this)">  <div class="legend-dot" style="background:var(--churn)"></div>Churn</div>
+  <div class="legend-item" data-layer="urun"    onclick="toggleLayer('urun',this)">   <div class="legend-dot" style="background:var(--urun)"></div>Ürün</div>
+  <div class="legend-item" data-layer="dijital" onclick="toggleLayer('dijital',this)"><div class="legend-dot" style="background:var(--dijital)"></div>Dijital</div>
+  <div class="legend-item" data-layer="onday"   onclick="toggleLayer('onday',this)">  <div class="legend-dot" style="background:var(--onday)"></div>ON Days</div>
+  <div class="legend-item" data-layer="mp"      onclick="toggleLayer('mp',this)">     <div class="legend-dot" style="background:var(--mp)"></div>Marketplace</div>
+  <div class="legend-item" data-layer="tatil"   onclick="toggleLayer('tatil',this)">  <div class="legend-dot" style="background:var(--tatil)"></div>Tatil</div>
+  <div class="legend-item" data-layer="dini"    onclick="toggleLayer('dini',this)">   <div class="legend-dot" style="background:var(--dini)"></div>Dini</div>
+  <div class="legend-item" data-layer="ekinoks" onclick="toggleLayer('ekinoks',this)"><div class="legend-dot" style="background:var(--ekinoks)"></div>Ekinoks</div>
+  <div class="legend-divider"></div>
+  <div class="legend-item" id="legend-rakip"    onclick="toggleRakip(this)">   <div class="legend-dot" style="background:var(--cati);border-radius:2px"></div>⚠ Rakip</div>
+  <div class="legend-item" id="legend-rakip012" onclick="toggleRakip012(this)"><div class="legend-dot" style="background:var(--mp);border-radius:2px"></div>⚠ 012</div>
+  <div class="legend-divider"></div>
+  <span class="legend-label">Fazlar</span>
+  <div class="faz-legend-item"><div class="faz-swatch" style="background:rgba(230,51,41,0.25)"></div>Prep</div>
+  <div class="faz-legend-item"><div class="faz-swatch" style="background:rgba(230,51,41,0.55)"></div>Launch</div>
+  <div class="faz-legend-item"><div class="faz-swatch" style="background:#E63329"></div>Peak</div>
+  <div class="faz-legend-item"><div class="faz-swatch" style="background:rgba(230,51,41,0.28)"></div>Closing</div>
+</div>
+
+<div id="calendarRoot"></div>
+<div class="summary-bar" id="summaryBar"></div>
+
+<!-- HOVER TOOLTIP -->
+<div class="htip" id="htip"></div>
+
+<!-- EDIT PANEL OVERLAY -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+
+<!-- EDIT PANEL -->
+<div class="edit-panel" id="editPanel">
+  <div class="panel-header">
+    <div class="panel-header-title" id="panelTitle">Kampanya Düzenle</div>
+    <button class="panel-close" onclick="closePanel()">✕</button>
+  </div>
+
+  <div class="panel-body">
+    <input type="hidden" id="editId">
+
+    <div class="form-section">
+      <div class="form-section-title">Temel Bilgiler</div>
+      <div class="form-row">
+        <label class="form-label">Kampanya Adı *</label>
+        <input class="form-input" id="editName" type="text" placeholder="örn: Black Friday 2026">
+      </div>
+      <div class="form-row-2">
+        <div class="form-row">
+          <label class="form-label">Katman *</label>
+          <select class="form-select" id="editLayer">
+            <option value="cati">Çatı Kampanya</option>
+            <option value="marka">Marka Kampanyası</option>
+            <option value="churn">Churn / Win-back</option>
+            <option value="urun">Ürün / Lower Funnel</option>
+            <option value="dijital">Dijital Gün</option>
+            <option value="onday">ON Day</option>
+            <option value="mp">Marketplace</option>
+            <option value="tatil">Resmi Tatil</option>
+            <option value="dini">Dini Bayram</option>
+            <option value="ekinoks">Ekinoks / Mevsim</option>
+          </select>
+        </div>
+        <div class="form-row" id="phaseToggleRow">
+          <label class="form-label">Faz Sistemi</label>
+          <select class="form-select" id="editHasPhase" onchange="togglePhaseFields()">
+            <option value="yes">Evet — Prep/Launch/Peak/Closing</option>
+            <option value="no">Hayır — Sadece tarih aralığı</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAZ TARİHLERİ -->
+    <div class="form-section" id="phaseDatesSection">
+      <div class="form-section-title">Kampanya Fazları</div>
+      <div class="faz-grid">
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:rgba(230,51,41,0.3)"></span>Preparation Başlangıç</div>
+          <input type="date" id="editPrepStart">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:rgba(230,51,41,0.3)"></span>Preparation Bitiş</div>
+          <input type="date" id="editPrepEnd">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:rgba(230,51,41,0.55)"></span>Launch Başlangıç</div>
+          <input type="date" id="editLaunchStart">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:rgba(230,51,41,0.55)"></span>Launch Bitiş</div>
+          <input type="date" id="editLaunchEnd">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:#E63329"></span>Peak Başlangıç</div>
+          <input type="date" id="editPeakStart">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:#E63329"></span>Peak Bitiş</div>
+          <input type="date" id="editPeakEnd">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:rgba(230,51,41,0.3)"></span>Closing Başlangıç</div>
+          <input type="date" id="editClosingStart">
+        </div>
+        <div class="faz-item">
+          <div class="faz-item-label"><span class="faz-dot" style="background:rgba(230,51,41,0.3)"></span>Closing Bitiş</div>
+          <input type="date" id="editClosingEnd">
+        </div>
+      </div>
+    </div>
+
+    <!-- SIMPLE DATE (no phase) -->
+    <div class="form-section" id="simpleDateSection" style="display:none">
+      <div class="form-section-title">Tarih</div>
+      <div class="form-row-2">
+        <div class="form-row">
+          <label class="form-label">Başlangıç</label>
+          <input class="form-input" type="date" id="editSimpleStart">
+        </div>
+        <div class="form-row">
+          <label class="form-label">Bitiş</label>
+          <input class="form-input" type="date" id="editSimpleEnd">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Kampanya Detayları</div>
+      <div class="form-row">
+        <label class="form-label">Brief / Açıklama</label>
+        <textarea class="form-textarea" id="editBrief" placeholder="Kampanya özeti, hedef, strateji notu..."></textarea>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Hedef Segment</label>
+        <input class="form-input" id="editSegment" type="text" placeholder="örn: VIP + Gold + Aktif Segmentler">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Kanallar</label>
+        <input class="form-input" id="editChannels" type="text" placeholder="örn: Email · Push · SMS · Paid Social">
+      </div>
+      <div class="form-row">
+        <label class="form-label">KPI'lar</label>
+        <input class="form-input" id="editKpi" type="text" placeholder="örn: Conversion Rate, AOV, ROAS">
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <button class="btn-save" onclick="saveEdit()">Kaydet</button>
+    <button class="btn-delete" id="btnDelete" onclick="deleteEdit()">Sil</button>
+    <button class="btn-cancel" onclick="closePanel()">İptal</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── NRF ENGINE ───────────────────────────────
+function getNRFYearStart(y){const f=new Date(y,1,1);const s=new Date(f);s.setDate(f.getDate()-f.getDay());return s;}
+function buildNRFWeeks(year){
+  const start=getNRFYearStart(year);
+  const pat=[4,5,4,4,5,4,4,5,4,4,5,4];
+  const qtrs=[1,1,1,2,2,2,3,3,3,4,4,4];
+  const trM=['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'];
+  const weeks=[];let n=1;let d=new Date(start);
+  for(let p=0;p<12;p++){for(let w=0;w<pat[p];w++){
+    const ws=new Date(d),we=new Date(d);we.setDate(we.getDate()+6);
+    weeks.push({weekNum:n,quarter:qtrs[p],period:p+1,periodName:trM[p],periodWeek:w+1,periodTotal:pat[p],start:new Date(ws),end:new Date(we)});
+    d.setDate(d.getDate()+7);n++;
+  }}
+  return weeks;
+}
+function parseDate(str){const[y,m,d]=str.split('-').map(Number);return new Date(y,m-1,d);}
+function fmtD(d){return `${d.getDate()} ${['Oca','Sub','Mar','Nis','May','Haz','Tem','Agu','Eyl','Eki','Kas','Ara'][d.getMonth()]}`;}
+function fmtFull(str){const d=parseDate(str);return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;}
+function uid(){return 'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+
+// ─── DEFAULT DATA ─────────────────────────────
+function getDefaultPhases(year){
+  const y=year;
+  return [
+    {id:'yilbasi',layer:'cati',name:'Yeni Yil Indirimi',hasPhase:true,
+     prep:[`${y}-12-20`,`${y}-12-31`],launch:[`${y}-01-02`,`${y}-01-05`],peak:[`${y}-01-06`,`${y}-01-12`],closing:[`${y}-01-13`,`${y}-01-15`],
+     brief:'Yilbasi sonrasi yuksek trafik firsatini degerlendir. Kis koleksiyonunda %30+ indirim.',
+     channels:'Email · Push · SMS · Paid Social',segment:'Tum Aktif + Yeni Kayitlar',kpi:'Conversion Rate, AOV, New Customers'},
+    {id:'kis-clearance',layer:'cati',name:'Kis Sezonu Clearance',hasPhase:true,
+     prep:[`${y}-01-13`,`${y}-01-19`],launch:[`${y}-01-20`,`${y}-01-24`],peak:[`${y}-01-25`,`${y}-02-02`],closing:[`${y}-02-03`,`${y}-02-05`],
+     brief:'Kis stogu eritme. %50 ye varan indirimler. Churn riski tasiyan segmentlere ozel erken erisim.',
+     channels:'Email · Push · SMS · Retargeting',segment:'VIP Erken Erisim → Sadik → Tum Aktif',kpi:'Sell-Through Rate, Revenue per Email'},
+    {id:'sevgililer',layer:'cati',name:'Sevgililer Gunu',hasPhase:true,
+     prep:[`${y}-01-27`,`${y}-02-07`],launch:[`${y}-02-08`,`${y}-02-11`],peak:[`${y}-02-12`,`${y}-02-14`],closing:[`${y}-02-15`,`${y}-02-16`],
+     brief:'Hediye odakli kampanya. Cift giyim, aksesuar, hediye seti one plan.',
+     channels:'Email · Push · Instagram · Paid',segment:'Aktif + Erkek Segment + Gift Buyers',kpi:'AOV, Gift Category Revenue'},
+    {id:'ilkbahar-lansman',layer:'cati',name:'Ilkbahar Lansmanı',hasPhase:true,
+     prep:[`${y}-02-16`,`${y}-02-28`],launch:[`${y}-03-01`,`${y}-03-05`],peak:[`${y}-03-06`,`${y}-03-15`],closing:[`${y}-03-16`,`${y}-03-20`],
+     brief:'Yeni sezon acilisi. United Colors paleti ile ilkbahar enerjisi. Sadik segmente exclusive preview.',
+     channels:'Email · Push · SMS · Influencer · Paid',segment:'VIP → Gold → Aktif (kademeli)',kpi:'New Collection Revenue, Open Rate'},
+    {id:'8mart',layer:'cati',name:'8 Mart Kadinlar Gunu',hasPhase:true,
+     prep:[`${y}-03-01`,`${y}-03-05`],launch:[`${y}-03-06`,`${y}-03-07`],peak:[`${y}-03-08`,`${y}-03-08`],closing:[`${y}-03-09`,`${y}-03-10`],
+     brief:'Guclendirici ton, indirim degil deger oner. Benetton kimligi ile feministik mesaj.',
+     channels:'Email · Social · PR · In-store',segment:'Kadin Musteriler',kpi:'Engagement Rate, Brand Sentiment'},
+    {id:'bahar-sezon',layer:'cati',name:'Bahar Sezonu Acilisi',hasPhase:true,
+     prep:[`${y}-03-24`,`${y}-04-01`],launch:[`${y}-04-01`,`${y}-04-05`],peak:[`${y}-04-06`,`${y}-04-15`],closing:[`${y}-04-16`,`${y}-04-20`],
+     brief:'Kisten bahara gecis. Cross-sell potansiyeli yuksek. Lapsing segmenti reaktivasyon firsati.',
+     channels:'Email · Push · SMS · Paid · CRM Automation',segment:'Aktif + Lapsing (90 gun)',kpi:'Revenue, Conversion, Reactivation'},
+    {id:'yaz-lansman',layer:'cati',name:'Yaz Lansmanı',hasPhase:true,
+     prep:[`${y}-05-18`,`${y}-05-31`],launch:[`${y}-06-01`,`${y}-06-05`],peak:[`${y}-06-06`,`${y}-06-15`],closing:[`${y}-06-16`,`${y}-06-20`],
+     brief:'Yaz sezonu acilisi. Mayo, plaj ve hafif giyim. Lifestyle iletisim agirlikli.',
+     channels:'Email · Push · Instagram · Paid · SMS',segment:'Tum Aktif + Yaz Alicilari (LY)',kpi:'Summer Category Revenue'},
+    {id:'yaz-indirim',layer:'cati',name:'Yaz Indirim Sezonu',hasPhase:true,
+     prep:[`${y}-06-22`,`${y}-06-30`],launch:[`${y}-07-01`,`${y}-07-05`],peak:[`${y}-07-06`,`${y}-07-25`],closing:[`${y}-07-26`,`${y}-08-15`],
+     brief:'Yaz clearance. %40-60 indirim. Rakip basinci MAX. Fiyat yerine hiz + deger vurgula.',
+     channels:'Email · Push · SMS · Retargeting · Paid',segment:'Tum Aktif + Lapsing + Fiyat Duyarli',kpi:'Sell-Through Rate, Conversion'},
+    {id:'bts',layer:'cati',name:'Back to School / Work',hasPhase:true,
+     prep:[`${y}-08-04`,`${y}-08-18`],launch:[`${y}-08-18`,`${y}-08-22`],peak:[`${y}-08-23`,`${y}-09-05`],closing:[`${y}-09-06`,`${y}-09-10`],
+     brief:'Okul donemi + calisma hayati gecisi. 012 icin cocuk okul giyimi, yetiskin klasik/casual mix.',
+     channels:'Email · Push · SMS · Paid · SEO',segment:'Genc Ebeveynler · 25-40 · 012 Segmenti',kpi:'Category Revenue, AOV, ROAS'},
+    {id:'sonbahar-lansman',layer:'cati',name:'Sonbahar Lansmanı',hasPhase:true,
+     prep:[`${y}-09-01`,`${y}-09-12`],launch:[`${y}-09-13`,`${y}-09-17`],peak:[`${y}-09-18`,`${y}-10-01`],closing:[`${y}-10-02`,`${y}-10-05`],
+     brief:'Sezonun ikinci buyuk lansmanı. Kis koleksiyonu ilk girisler. Sadik segmente erken erisim.',
+     channels:'Email · Push · SMS · Influencer · Paid',segment:'VIP → Gold → Aktif (kademeli)',kpi:'AW Revenue Share, List Growth'},
+    {id:'pre-bf',layer:'cati',name:'Pre-Black Friday Isinma',hasPhase:true,
+     prep:[`${y}-10-20`,`${y}-10-31`],launch:[`${y}-11-01`,`${y}-11-07`],peak:[`${y}-11-08`,`${y}-11-20`],closing:[`${y}-11-21`,`${y}-11-21`],
+     brief:'BF oncesi beklenti yaratma. Early Access ile VIP e ozel erken alisveris. Win-back listesi aktive.',
+     channels:'Email · Push · SMS · Paid · Display',segment:'VIP + Gold + Win-back Listesi',kpi:'Wishlist Adds, Early Revenue'},
+    {id:'black-friday',layer:'cati',name:'BLACK FRIDAY — Ana Kampanya',hasPhase:true,
+     prep:[`${y}-11-10`,`${y}-11-20`],launch:[`${y}-11-21`,`${y}-11-22`],peak:[`${y}-11-28`,`${y}-11-30`],closing:[`${y}-12-01`,`${y}-12-03`],
+     brief:'YILIN EN KRITIK KAMPANYASI. Tum kanallar aktif. Saatlik iletisim plani. Stok + fiyat + segment matris zorunlu.',
+     channels:'Email · Push · SMS · Paid · Display · Social · In-store',segment:'TUMU — Segment bazli farkli teklif',kpi:'Total Revenue, Orders, AOV, ROAS'},
+    {id:'yilsonu',layer:'cati',name:'Yilsonu & Yeni Yil Kampanyasi',hasPhase:true,
+     prep:[`${y}-11-25`,`${y}-12-01`],launch:[`${y}-12-01`,`${y}-12-07`],peak:[`${y}-12-08`,`${y}-12-24`],closing:[`${y}-12-25`,`${y}-12-31`],
+     brief:'Hediye sezonu + yilbasi partileri. Gift card push, hediye seti, AOV artirma odakli.',
+     channels:'Email · Push · SMS · Paid · In-store',segment:'Aktif + Gifters + High AOV',kpi:'Gift Card Revenue, AOV, Holiday Revenue'},
+    {id:'winter-essentials',layer:'marka',name:'Winter Essentials Kapsul',hasPhase:true,
+     prep:[`${y}-01-06`,`${y}-01-12`],launch:[`${y}-01-13`,`${y}-01-16`],peak:[`${y}-01-17`,`${y}-01-22`],closing:[`${y}-01-23`,`${y}-01-26`],
+     brief:'Kapsul koleksiyon lansmanı. Minimal estetik, yuksek kalite. Satis degil arzu yaratma.',
+     channels:'Email · Instagram · Influencer',segment:'Fashion-forward · VIP · 25-40',kpi:'Capsule Collection Revenue'},
+    {id:'ekinoks-ilkbahar',layer:'marka',name:'Ilkbahar Ekinoksu — Renk',hasPhase:true,
+     prep:[`${y}-03-10`,`${y}-03-18`],launch:[`${y}-03-19`,`${y}-03-21`],peak:[`${y}-03-22`,`${y}-03-28`],closing:[`${y}-03-29`,`${y}-03-31`],
+     brief:'Ekinoks tarihi ile senkronize. United Colors renk dunyasi. Editorial tone, inspiration odakli.',
+     channels:'Email · Instagram · Pinterest · Influencer',segment:'Brand Lovers · Fashion · 22-35',kpi:'Brand Engagement, Content Reach'},
+    {id:'dunya-gunu',layer:'marka',name:'Dunya Gunu — Surdurulebilirlik',hasPhase:true,
+     prep:[`${y}-04-14`,`${y}-04-20`],launch:[`${y}-04-21`,`${y}-04-22`],peak:[`${y}-04-22`,`${y}-04-23`],closing:[`${y}-04-24`,`${y}-04-26`],
+     brief:'Benetton sustainability hikayesi. Organik koleksiyon. Bilincten aksiyona gecis.',
+     channels:'Email · Social · PR · In-store',segment:'Eco-conscious · 25-40',kpi:'Sustainable Product Revenue'},
+    {id:'yaz-donu',layer:'marka',name:'Yaz Gundonu — Beach & Sun',hasPhase:true,
+     prep:[`${y}-06-10`,`${y}-06-18`],launch:[`${y}-06-19`,`${y}-06-21`],peak:[`${y}-06-22`,`${y}-07-01`],closing:[`${y}-07-02`,`${y}-07-05`],
+     brief:'Yaz hayati kampanyasi. Desirability odakli, satis odakli degil.',
+     channels:'Instagram · Email · Influencer · YouTube',segment:'Lifestyle · 18-35',kpi:'Brand Reach, Beach Category Sales'},
+    {id:'ekinoks-sonbahar',layer:'marka',name:'Sonbahar Ekinoksu — Fall',hasPhase:true,
+     prep:[`${y}-09-12`,`${y}-09-20`],launch:[`${y}-09-21`,`${y}-09-23`],peak:[`${y}-09-24`,`${y}-10-03`],closing:[`${y}-10-04`,`${y}-10-07`],
+     brief:'Sonbahar renk gecisi. Toprak tonlari, katmanli giyim. Editorial icerik agirlikli.',
+     channels:'Email · Instagram · Pinterest · Influencer',segment:'Fashion · 25-45 · VIP',kpi:'AW Category Revenue'},
+    {id:'yilbasi-hediye',layer:'marka',name:'Yilbasi Hediye Rehberi',hasPhase:true,
+     prep:[`${y}-12-01`,`${y}-12-07`],launch:[`${y}-12-08`,`${y}-12-11`],peak:[`${y}-12-12`,`${y}-12-22`],closing:[`${y}-12-23`,`${y}-12-26`],
+     brief:'Editoryal hediye rehberi. Gift card + hediye paketi. Erkek alicilara ozel rehber.',
+     channels:'Email · Social · Influencer · In-store',segment:'Gifters · High AOV · VIP · Erkek',kpi:'Gift Category Revenue, Gift Card Sales'},
+  ];
+}
+
+function getDefaultEvents(year){
+  const y=year,evs=[];
+  const add=(s,e,l,lb)=>evs.push({id:uid(),date:s,end:e||s,layer:l,label:lb,hasPhase:false});
+  const addS=(d,l,lb)=>add(d,d,l,lb);
+  for(let m=1;m<=12;m++) addS(`${y}-${String(m).padStart(2,'0')}-10`,'onday','ON Day — Brief Deadline');
+  [[1,'1.1'],[2,'2.2'],[3,'3.3'],[4,'4.4'],[5,'5.5'],[6,'6.6'],[7,'7.7'],[8,'8.8'],[9,'9.9'],[10,'10.10'],[11,'11.11 — Buyuk Gun'],[12,'12.12']].forEach(([m,lb])=>addS(`${y}-${String(m).padStart(2,'0')}-${String(m).padStart(2,'0')}`,'dijital',lb));
+  addS(`${y}-03-20`,'ekinoks','Ilkbahar Ekinoksu');addS(`${y}-06-21`,'ekinoks','Yaz Gundonu');addS(`${y}-09-22`,'ekinoks','Sonbahar Ekinoksu');addS(`${y}-12-21`,'ekinoks','Kis Gundonu');
+  [[`${y}-01-01`,'Yilbasi'],[`${y}-04-23`,'23 Nisan'],[`${y}-05-01`,'1 Mayis'],[`${y}-05-19`,'19 Mayis'],[`${y}-07-15`,'15 Temmuz'],[`${y}-08-30`,'30 Agustos'],[`${y}-10-29`,'29 Ekim']].forEach(([d,lb])=>addS(d,'tatil',lb));
+  const ram={2025:['2025-03-30','2025-04-01'],2026:['2026-03-20','2026-03-22'],2027:['2027-03-09','2027-03-11']};
+  const kur={2025:['2025-06-06','2025-06-09'],2026:['2026-05-27','2026-05-30'],2027:['2027-05-17','2027-05-20']};
+  if(ram[y])add(ram[y][0],ram[y][1],'dini','Ramazan Bayrami');
+  if(kur[y])add(kur[y][0],kur[y][1],'dini','Kurban Bayrami');
+  [[`${y}-05-28`,`${y}-05-31`,'Trendyol Efsane Mayis'],[`${y}-07-11`,`${y}-07-13`,'Trendyol Yaz'],[`${y}-09-12`,`${y}-09-14`,'Trendyol Sonbahar'],[`${y}-11-14`,`${y}-11-17`,'Trendyol Efsane Kasim (Pre)'],[`${y}-11-21`,`${y}-11-30`,'Black Friday / Trendyol'],[`${y}-04-25`,`${y}-04-27`,'Hepsiburada Nisan'],[`${y}-10-17`,`${y}-10-19`,'Hepsiburada Ekim'],[`${y}-12-01`,`${y}-12-03`,'Trendyol Aralik']].forEach(([s,e,lb])=>add(s,e,'mp',lb));
+  [[`${y}-01-08`,`${y}-01-14`,'Win-back 60+ Gun'],[`${y}-03-15`,`${y}-03-22`,'Ilkbahar Reaktivasyon'],[`${y}-07-15`,`${y}-07-22`,'Yaz Win-back'],[`${y}-09-01`,`${y}-09-10`,'Sezon Basi Reaktivasyon'],[`${y}-10-20`,`${y}-10-28`,'Pre-BF Win-back'],[`${y}-12-01`,`${y}-12-08`,'Yil Sonu Win-back']].forEach(([s,e,lb])=>add(s,e,'churn',lb));
+  [[`${y}-01-10`,`${y}-01-17`,'Kazak & Mont Stok Eritme'],[`${y}-03-25`,`${y}-04-05`,'Elbise & Bluz Push'],[`${y}-06-10`,`${y}-06-20`,'Yaz Peak Elbise'],[`${y}-08-15`,`${y}-08-22`,'BTS Canta & Ayakkabi'],[`${y}-09-10`,`${y}-09-20`,'Trencot & Ceket'],[`${y}-11-05`,`${y}-11-13`,'Pre-BF En Cok Satanlar'],[`${y}-12-15`,`${y}-12-25`,'Hediye Seti & Gift Card']].forEach(([s,e,lb])=>add(s,e,'urun',lb));
+  return evs;
+}
+
+// ─── LOCAL STORAGE ────────────────────────────
+const STORAGE_KEY = 'benetton_calendar_v3';
+
+function saveToStorage(year, phases, events){
+  try{
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    data[year] = {phases, events};
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }catch(e){console.warn('Storage save failed',e);}
+}
+
+function loadFromStorage(year){
+  try{
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');
+    if(data[year]) return data[year];
+  }catch(e){}
+  return null;
+}
+
+function getCurrentYear(){return parseInt(document.getElementById('yearSelect').value);}
+
+let currentPhases = [];
+let currentEvents = [];
+
+function loadYear(year){
+  const stored = loadFromStorage(year);
+  if(stored){
+    currentPhases = stored.phases;
+    currentEvents = stored.events;
+  } else {
+    currentPhases = getDefaultPhases(year).map(p=>({...p,id:p.id||uid()}));
+    currentEvents = getDefaultEvents(year);
+    saveToStorage(year, currentPhases, currentEvents);
+  }
+}
+
+// ─── PHASE / EVENT MATCHING ───────────────────
+function getPhaseForWeek(week, phases){
+  const results=[];
+  for(const camp of phases){
+    if(!camp.hasPhase) continue;
+    const fazlar=[{key:'prep',dates:camp.prep},{key:'launch',dates:camp.launch},{key:'peak',dates:camp.peak},{key:'closing',dates:camp.closing}];
+    for(const faz of fazlar){
+      if(!faz.dates||!faz.dates[0]||!faz.dates[1]) continue;
+      const fS=parseDate(faz.dates[0]),fE=parseDate(faz.dates[1]);
+      if(fS<=week.end&&fE>=week.start){results.push({...camp,currentFaz:faz.key});break;}
+    }
+  }
+  return results;
+}
+
+function getEventsForWeek(week, events){
+  return events.filter(ev=>{
+    const eS=parseDate(ev.date),eE=parseDate(ev.end||ev.date);
+    return eS<=week.end&&eE>=week.start;
+  });
+}
+
+// Non-phase campaigns as simple events
+function getSimpleCampaignsForWeek(week, phases){
+  return phases.filter(p=>{
+    if(p.hasPhase) return false;
+    if(!p.date) return false;
+    const eS=parseDate(p.date),eE=parseDate(p.end||p.date);
+    return eS<=week.end&&eE>=week.start;
+  });
+}
+
+// ─── COMPETITOR ZONES ─────────────────────────
+function getCompetitorZones(year){
+  const y=year;
+  return [
+    {start:`${y}-01-02`,end:`${y}-01-19`,label:'Kis Sonu Clearance — GAP, Zara, H&M, Mango'},
+    {start:`${y}-02-10`,end:`${y}-02-16`,label:'Sevgililer Haftasi — Orta-Ust Segment'},
+    {start:`${y}-03-01`,end:`${y}-03-15`,label:'Kis Clearance Devam — GAP, Massimo Dutti'},
+    {start:`${y}-04-10`,end:`${y}-04-20`,label:'Ilkbahar Acilis — H&M, Mango, Zara'},
+    {start:`${y}-06-15`,end:`${y}-06-30`,label:'Yaz Oncesi Sezon Gecis — Tum Rakipler'},
+    {start:`${y}-07-01`,end:`${y}-07-31`,label:'YOGUN: Yaz Clearance — GAP, Zara, H&M, Mango'},
+    {start:`${y}-08-01`,end:`${y}-08-20`,label:'Yaz Sonu BTS — GAP, H&M'},
+    {start:`${y}-09-01`,end:`${y}-09-14`,label:'Sonbahar Gecis — Zara, Mango'},
+    {start:`${y}-10-20`,end:`${y}-10-31`,label:'Kis Oncesi Promosyon — H&M, GAP'},
+    {start:`${y}-11-14`,end:`${y}-11-30`,label:'YOGUN: Black Friday — Tum Rakipler'},
+    {start:`${y}-12-01`,end:`${y}-12-10`,label:'Yilsonu — GAP, Zara, Mango'},
+    {start:`${y}-12-26`,end:`${y}-12-31`,label:'Yilsonu Clearance — Tum Rakipler'},
+  ];
+}
+function getCompetitor012Zones(year){
+  const y=year;
+  return [
+    {start:`${y}-01-02`,end:`${y}-01-20`,label:"012 Kis Sonu — BG Store, Carter's, LCW Kids"},
+    {start:`${y}-02-17`,end:`${y}-02-28`,label:"012 Somestr — BG Store, H&M Kids"},
+    {start:`${y}-04-18`,end:`${y}-04-25`,label:"012 23 Nisan — Tum 012"},
+    {start:`${y}-05-05`,end:`${y}-05-12`,label:"012 Anneler Gunu — Carter's, BG Store"},
+    {start:`${y}-06-01`,end:`${y}-06-15`,label:"012 Okul Sonu — LCW Kids, Zara Kids"},
+    {start:`${y}-07-01`,end:`${y}-07-31`,label:"YOGUN 012: Yaz Clearance"},
+    {start:`${y}-08-01`,end:`${y}-09-05`,label:"YOGUN 012: Back to School"},
+    {start:`${y}-10-01`,end:`${y}-10-15`,label:"012 Kis Lansman — BG Store, LCW Kids"},
+    {start:`${y}-11-14`,end:`${y}-11-30`,label:"YOGUN 012: Black Friday"},
+    {start:`${y}-12-01`,end:`${y}-12-24`,label:"012 Yilbasi — Carter's, BG Store"},
+  ];
+}
+function isInZone(week,zones){return zones.find(z=>parseDate(z.start)<=week.end&&parseDate(z.end)>=week.start);}
+
+// ─── LAYER VISIBILITY ─────────────────────────
+const hiddenLayers=new Set();
+function toggleLayer(layer,el){
+  hiddenLayers.has(layer)?hiddenLayers.delete(layer):hiddenLayers.add(layer);
+  el.classList.toggle('hidden',hiddenLayers.has(layer));
+  document.querySelectorAll(`.event[data-layer="${layer}"]`).forEach(e=>e.classList.toggle('hidden-layer',hiddenLayers.has(layer)));
+}
+let rakipVisible=true;
+function toggleRakip(el){rakipVisible=!rakipVisible;el.classList.toggle('hidden',!rakipVisible);renderCalendar();}
+let rakip012Visible=true;
+function toggleRakip012(el){rakip012Visible=!rakip012Visible;el.classList.toggle('hidden',!rakip012Visible);renderCalendar();}
+
+// ─── HOVER TOOLTIP ────────────────────────────
+const htip=document.getElementById('htip');
+const fazTR={prep:'Preparation',launch:'Launch',peak:'Peak',closing:'Closing'};
+const layerColorMap={cati:'var(--cati)',marka:'var(--marka)',churn:'var(--churn)',urun:'var(--urun)',dijital:'var(--dijital)',onday:'var(--onday)',mp:'var(--mp)',tatil:'var(--tatil)',dini:'var(--dini)',ekinoks:'var(--ekinoks)'};
+
+function showHtip(e,week,weekEvents,phaseMatches,compMatch,comp012Match){
+  let html=`<div class="htip-week">W${String(week.weekNum).padStart(2,'0')} · ${fmtD(week.start)} – ${fmtD(week.end)}</div>`;
+  if(phaseMatches.length>0){
+    html+=`<div style="margin-bottom:6px"><div class="htip-section-title">Kampanya Fazlari</div>`;
+    phaseMatches.forEach(pm=>{
+      const sfx=pm.layer==='marka'?'-m':'';
+      html+=`<div class="htip-event ev-${pm.layer}">
+        <div class="htip-event-name">${pm.name}</div>
+        <div style="margin-bottom:3px"><span class="faz-label ${pm.currentFaz}${sfx}">${fazTR[pm.currentFaz]}</span></div>
+        <div class="htip-event-note">${pm.brief||''}</div>
+        ${pm.segment?`<div class="htip-event-note" style="margin-top:4px"><strong>Segment:</strong> ${pm.segment}</div>`:''}
+        ${pm.channels?`<div class="htip-event-note"><strong>Kanallar:</strong> ${pm.channels}</div>`:''}
+        ${pm.kpi?`<div class="htip-event-note"><strong>KPI:</strong> ${pm.kpi}</div>`:''}
+        <div class="htip-event-dates">Prep: ${fmtFull(pm.prep[0])} · Launch: ${fmtFull(pm.launch[0])}<br>Peak: ${fmtFull(pm.peak[0])} · Closing: ${fmtFull(pm.closing[0])}–${fmtFull(pm.closing[1])}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+  const others=weekEvents.filter(ev=>ev.layer!=='cati'&&ev.layer!=='marka');
+  if(others.length>0){
+    if(phaseMatches.length>0) html+=`<div class="htip-divider"></div>`;
+    html+=`<div style="margin-bottom:4px"><div class="htip-section-title">Diger Etkinlikler</div>`;
+    others.forEach(ev=>{html+=`<div class="htip-simple"><div class="htip-dot" style="background:${layerColorMap[ev.layer]||'#888'}"></div>${ev.label}</div>`;});
+    html+=`</div>`;
+  }
+  if(compMatch||comp012Match){
+    html+=`<div class="htip-divider"></div>`;
+    if(compMatch) html+=`<div class="htip-zone red">⚠ ${compMatch.label}</div>`;
+    if(comp012Match) html+=`<div class="htip-zone orange">⚠ ${comp012Match.label}</div>`;
+  }
+  html+=`<div class="htip-edit-hint">Tıkla → Düzenle / Ayrıntı Gör</div>`;
+  htip.innerHTML=html;htip.classList.add('visible');positionHtip(e);
+}
+function positionHtip(e){
+  const tw=310,margin=14;
+  let x=e.clientX+margin,y=e.clientY+margin;
+  if(x+tw>window.innerWidth-10)x=e.clientX-tw-margin;
+  if(y+440>window.innerHeight-10)y=Math.max(10,window.innerHeight-450);
+  htip.style.left=x+'px';htip.style.top=y+'px';
+}
+document.addEventListener('mousemove',e=>{if(htip.classList.contains('visible'))positionHtip(e);});
+
+// ─── EDIT PANEL ───────────────────────────────
+let editingId = null;
+let editingType = null; // 'phase' | 'event'
+
+function openPanelNew(){
+  editingId = null;
+  editingType = 'phase';
+  document.getElementById('panelTitle').textContent = 'Yeni Kampanya Ekle';
+  document.getElementById('btnDelete').style.display = 'none';
+  clearForm();
+  document.getElementById('editHasPhase').value = 'yes';
+  togglePhaseFields();
+  openPanel();
+}
+
+function openPanelEdit(id, type){
+  editingId = id;
+  editingType = type;
+  document.getElementById('panelTitle').textContent = 'Kampanya Düzenle';
+  document.getElementById('btnDelete').style.display = '';
+  if(type === 'phase'){
+    const camp = currentPhases.find(p=>p.id===id);
+    if(!camp) return;
+    fillFormPhase(camp);
+  } else {
+    const ev = currentEvents.find(e=>e.id===id);
+    if(!ev) return;
+    fillFormEvent(ev);
+  }
+  openPanel();
+}
+
+function openPanel(){
+  document.getElementById('panelOverlay').classList.add('open');
+  document.getElementById('editPanel').classList.add('open');
+}
+function closePanel(){
+  document.getElementById('panelOverlay').classList.remove('open');
+  document.getElementById('editPanel').classList.remove('open');
+}
+
+function clearForm(){
+  ['editId','editName','editBrief','editSegment','editChannels','editKpi',
+   'editPrepStart','editPrepEnd','editLaunchStart','editLaunchEnd',
+   'editPeakStart','editPeakEnd','editClosingStart','editClosingEnd',
+   'editSimpleStart','editSimpleEnd'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('editLayer').value='cati';
+}
+
+function fillFormPhase(camp){
+  document.getElementById('editId').value = camp.id;
+  document.getElementById('editName').value = camp.name||'';
+  document.getElementById('editLayer').value = camp.layer||'cati';
+  document.getElementById('editHasPhase').value = 'yes';
+  document.getElementById('editBrief').value = camp.brief||'';
+  document.getElementById('editSegment').value = camp.segment||'';
+  document.getElementById('editChannels').value = camp.channels||'';
+  document.getElementById('editKpi').value = camp.kpi||'';
+  if(camp.prep){document.getElementById('editPrepStart').value=camp.prep[0]||'';document.getElementById('editPrepEnd').value=camp.prep[1]||'';}
+  if(camp.launch){document.getElementById('editLaunchStart').value=camp.launch[0]||'';document.getElementById('editLaunchEnd').value=camp.launch[1]||'';}
+  if(camp.peak){document.getElementById('editPeakStart').value=camp.peak[0]||'';document.getElementById('editPeakEnd').value=camp.peak[1]||'';}
+  if(camp.closing){document.getElementById('editClosingStart').value=camp.closing[0]||'';document.getElementById('editClosingEnd').value=camp.closing[1]||'';}
+  togglePhaseFields();
+}
+
+function fillFormEvent(ev){
+  document.getElementById('editId').value = ev.id;
+  document.getElementById('editName').value = ev.label||'';
+  document.getElementById('editLayer').value = ev.layer||'churn';
+  document.getElementById('editHasPhase').value = 'no';
+  document.getElementById('editBrief').value = ev.brief||'';
+  document.getElementById('editSegment').value = ev.segment||'';
+  document.getElementById('editChannels').value = ev.channels||'';
+  document.getElementById('editKpi').value = ev.kpi||'';
+  document.getElementById('editSimpleStart').value = ev.date||'';
+  document.getElementById('editSimpleEnd').value = ev.end||ev.date||'';
+  togglePhaseFields();
+}
+
+function togglePhaseFields(){
+  const hasPhase = document.getElementById('editHasPhase').value === 'yes';
+  const layer = document.getElementById('editLayer').value;
+  const showPhase = hasPhase && (layer==='cati'||layer==='marka');
+  document.getElementById('phaseDatesSection').style.display = showPhase ? '' : 'none';
+  document.getElementById('simpleDateSection').style.display = showPhase ? 'none' : '';
+}
+
+function saveEdit(){
+  const name = document.getElementById('editName').value.trim();
+  if(!name){showToast('Kampanya adı zorunludur','red');return;}
+
+  const layer = document.getElementById('editLayer').value;
+  const hasPhase = document.getElementById('editHasPhase').value==='yes' && (layer==='cati'||layer==='marka');
+  const brief = document.getElementById('editBrief').value.trim();
+  const segment = document.getElementById('editSegment').value.trim();
+  const channels = document.getElementById('editChannels').value.trim();
+  const kpi = document.getElementById('editKpi').value.trim();
+  const year = getCurrentYear();
+
+  if(hasPhase){
+    const prepStart=document.getElementById('editPrepStart').value;
+    const prepEnd=document.getElementById('editPrepEnd').value;
+    const launchStart=document.getElementById('editLaunchStart').value;
+    const launchEnd=document.getElementById('editLaunchEnd').value;
+    const peakStart=document.getElementById('editPeakStart').value;
+    const peakEnd=document.getElementById('editPeakEnd').value;
+    const closingStart=document.getElementById('editClosingStart').value;
+    const closingEnd=document.getElementById('editClosingEnd').value;
+    if(!peakStart||!peakEnd){showToast('Peak tarihleri zorunludur','red');return;}
+
+    const obj={
+      id: editingId||uid(), layer, name, hasPhase:true,
+      prep:[prepStart||peakStart,prepEnd||peakStart],
+      launch:[launchStart||peakStart,launchEnd||peakStart],
+      peak:[peakStart,peakEnd],
+      closing:[closingStart||peakEnd,closingEnd||peakEnd],
+      brief,segment,channels,kpi
+    };
+    if(editingId){
+      const idx=currentPhases.findIndex(p=>p.id===editingId);
+      if(idx>=0)currentPhases[idx]=obj;
+    } else {
+      currentPhases.push(obj);
+    }
+  } else {
+    const start=document.getElementById('editSimpleStart').value;
+    const end=document.getElementById('editSimpleEnd').value||start;
+    if(!start){showToast('Tarih zorunludur','red');return;}
+
+    const obj={
+      id:editingId||uid(),layer,label:name,hasPhase:false,
+      date:start,end,brief,segment,channels,kpi
+    };
+    if(editingId&&editingType==='event'){
+      const idx=currentEvents.findIndex(e=>e.id===editingId);
+      if(idx>=0)currentEvents[idx]=obj;
+    } else if(editingId&&editingType==='phase'){
+      // was phase, now simple — remove from phases, add to events
+      currentPhases=currentPhases.filter(p=>p.id!==editingId);
+      currentEvents.push(obj);
+    } else {
+      currentEvents.push(obj);
+    }
+  }
+
+  saveToStorage(year, currentPhases, currentEvents);
+  closePanel();
+  renderCalendar();
+  showToast('Kaydedildi ✓','green');
+}
+
+function deleteEdit(){
+  if(!editingId) return;
+  if(!confirm('Bu kampanyayı silmek istediğinizden emin misiniz?')) return;
+  const year=getCurrentYear();
+  currentPhases=currentPhases.filter(p=>p.id!==editingId);
+  currentEvents=currentEvents.filter(e=>e.id!==editingId);
+  saveToStorage(year,currentPhases,currentEvents);
+  closePanel();
+  renderCalendar();
+  showToast('Silindi','red');
+}
+
+function resetData(){
+  if(!confirm('Tüm değişiklikler silinecek ve varsayılan verilere dönülecek. Emin misiniz?')) return;
+  const year=getCurrentYear();
+  localStorage.removeItem(STORAGE_KEY);
+  loadYear(year);
+  renderCalendar();
+  showToast('Varsayılan verilere dönüldü');
+}
+
+// ─── TOAST ────────────────────────────────────
+function showToast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+(type||'');
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ─── RENDER ───────────────────────────────────
+function renderCalendar(){
+  const year=getCurrentYear();
+  const qFilter=document.getElementById('quarterFilter').value;
+  const weeks=buildNRFWeeks(year);
+  const compZones=getCompetitorZones(year);
+  const comp012Zones=getCompetitor012Zones(year);
+  const root=document.getElementById('calendarRoot');
+  root.innerHTML='';
+  const quarters=qFilter==='all'?[1,2,3,4]:[parseInt(qFilter)];
+  const qNames={1:'Q1 — Kis / Ilkbahar Gecis',2:'Q2 — Ilkbahar / Yaz',3:'Q3 — Yaz / Sonbahar Gecis',4:'Q4 — Sonbahar / Kis & Peak'};
+  let totalEvents=0;
+
+  quarters.forEach(q=>{
+    const qWeeks=weeks.filter(w=>w.quarter===q);
+    const section=document.createElement('div');section.className='quarter-section';
+    const qHead=document.createElement('div');qHead.className='quarter-header';
+    qHead.innerHTML=`<span class="quarter-label">Q${q}</span><span class="quarter-dates">${qNames[q]}</span><span class="quarter-weeks">${fmtD(qWeeks[0].start)} — ${fmtD(qWeeks[qWeeks.length-1].end)} · ${qWeeks.length} hafta</span>`;
+    section.appendChild(qHead);
+    const scrollDiv=document.createElement('div');scrollDiv.className='calendar-scroll';
+    const row=document.createElement('div');row.className='weeks-row';
+
+    qWeeks.forEach(week=>{
+      const weekEvents=getEventsForWeek(week,currentEvents);
+      const phaseMatches=getPhaseForWeek(week,currentPhases);
+      const compMatch=rakipVisible?isInZone(week,compZones):null;
+      const comp012Match=rakip012Visible?isInZone(week,comp012Zones):null;
+      totalEvents+=weekEvents.length+phaseMatches.length;
+
+      const col=document.createElement('div');col.className='week-col';
+      if(compMatch)col.classList.add('danger-zone');
+      if(comp012Match)col.classList.add('danger-zone-012');
+
+      // Faz bar
+      let fazBar='';
+      if(phaseMatches.length>0){
+        fazBar='<div class="faz-bar">';
+        phaseMatches.forEach(pm=>{const sfx=pm.layer==='marka'?'-m':'';fazBar+=`<div class="faz-segment faz-${pm.currentFaz}${sfx}"></div>`;});
+        fazBar+='</div>';
+      }
+      const head=document.createElement('div');head.className='week-head';
+      head.innerHTML=`${fazBar}<div class="week-num">W${String(week.weekNum).padStart(2,'0')} · P${week.period} (${week.periodName})</div><div class="week-dates">${fmtD(week.start)} – ${fmtD(week.end)}</div>${compMatch?`<div class="danger-badge">⚠ ${compMatch.label}</div>`:''}${comp012Match?`<div class="danger-badge-012">⚠ ${comp012Match.label}</div>`:''}`;
+      col.appendChild(head);
+
+      const body=document.createElement('div');body.className='week-body';
+
+      // Phase campaigns
+      phaseMatches.forEach(pm=>{
+        const sfx=pm.layer==='marka'?'-m':'';
+        const div=document.createElement('div');
+        div.className=`event ev-${pm.layer}`;div.setAttribute('data-layer',pm.layer);
+        if(hiddenLayers.has(pm.layer))div.classList.add('hidden-layer');
+        div.innerHTML=`<span class="faz-label ${pm.currentFaz}${sfx}">${fazTR[pm.currentFaz]}</span>${pm.name}`;
+        div.addEventListener('click',e=>{e.stopPropagation();htip.classList.remove('visible');openPanelEdit(pm.id,'phase');});
+        body.appendChild(div);
+      });
+
+      // Other events
+      const others=weekEvents.filter(ev=>ev.layer!=='cati'&&ev.layer!=='marka');
+      others.forEach(ev=>{
+        const pill=document.createElement('div');pill.className=`event ev-${ev.layer}`;pill.setAttribute('data-layer',ev.layer);
+        if(hiddenLayers.has(ev.layer))pill.classList.add('hidden-layer');
+        pill.innerHTML=`<div class="event-dot" style="background:currentColor"></div>${ev.label}`;
+        pill.addEventListener('click',e=>{e.stopPropagation();htip.classList.remove('visible');openPanelEdit(ev.id,'event');});
+        body.appendChild(pill);
+      });
+
+      if(others.length===0&&phaseMatches.length===0) body.innerHTML=`<div class="empty-week">—</div>`;
+      col.appendChild(body);
+
+      // Hover
+      col.addEventListener('mouseenter',e=>{if(!document.getElementById('editPanel').classList.contains('open'))showHtip(e,week,weekEvents,phaseMatches,compMatch,comp012Match);});
+      col.addEventListener('mouseleave',()=>htip.classList.remove('visible'));
+      row.appendChild(col);
+    });
+
+    scrollDiv.appendChild(row);section.appendChild(scrollDiv);root.appendChild(section);
+  });
+
+  document.getElementById('summaryBar').innerHTML=`
+    <div class="summary-item">Yil: <strong>${year}</strong></div>
+    <div class="summary-item">Toplam Hafta: <strong>${weeks.length}</strong></div>
+    <div class="summary-item">Kampanya: <strong>${currentPhases.length} fazsistemi + ${currentEvents.length} etkinlik</strong></div>
+    <div class="summary-item">Gosterilen: <strong>${totalEvents}</strong></div>
+    <div class="summary-item" style="color:var(--green);font-weight:500">💡 Kampanyaya tıkla → düzenle</div>`;
+}
+
+// ─── XLSX EXPORT ──────────────────────────────
+function exportXLSX(){
+  const year=getCurrentYear();
+  const weeks=buildNRFWeeks(year);
+  const wb=XLSX.utils.book_new();
+  const fmt=d=>`${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`;
+  const lN={cati:'Cati',marka:'Marka',churn:'Churn/Win-back',urun:'Urun/Lower Funnel',dijital:'Dijital Gun',onday:'ON Day',mp:'Marketplace',tatil:'Resmi Tatil',dini:'Dini Bayram',ekinoks:'Ekinoks'};
+  const fN={prep:'Preparation',launch:'Launch',peak:'Peak',closing:'Closing'};
+
+  // S1 Haftalik Plan
+  const rows=[['Hafta','Ceyrek','Periyot','Periyot Adi','Baslangic','Bitis','Katman','Kampanya / Etkinlik','Faz']];
+  weeks.forEach(week=>{
+    const wE=getEventsForWeek(week,currentEvents);
+    const pM=getPhaseForWeek(week,currentPhases);
+    const allItems=[
+      ...pM.map(pm=>({label:pm.name,layer:lN[pm.layer]||pm.layer,faz:fN[pm.currentFaz]})),
+      ...wE.filter(ev=>ev.layer!=='cati'&&ev.layer!=='marka').map(ev=>({label:ev.label,layer:lN[ev.layer]||ev.layer,faz:''}))
+    ];
+    if(allItems.length===0)rows.push([`W${week.weekNum}`,`Q${week.quarter}`,week.period,week.periodName,fmt(week.start),fmt(week.end),'','','']);
+    else allItems.forEach((item,i)=>{
+      if(i===0)rows.push([`W${week.weekNum}`,`Q${week.quarter}`,week.period,week.periodName,fmt(week.start),fmt(week.end),item.layer,item.label,item.faz]);
+      else rows.push(['','','','','','',item.layer,item.label,item.faz]);
+    });
+  });
+  const ws=XLSX.utils.aoa_to_sheet(rows);ws['!cols']=[8,6,8,8,12,12,16,40,14].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws,'Haftalik Plan');
+
+  // S2 Kampanya Fazlari
+  const fazRows=[['Kampanya','Katman','Brief','Segment','Kanallar','KPI','Prep Start','Launch Start','Peak Start','Closing Start','Closing End']];
+  currentPhases.filter(p=>p.hasPhase).forEach(p=>{
+    fazRows.push([p.name,lN[p.layer]||p.layer,p.brief||'',p.segment||'',p.channels||'',p.kpi||'',
+      p.prep?fmtFull(p.prep[0]):'',p.launch?fmtFull(p.launch[0]):'',p.peak?fmtFull(p.peak[0]):'',
+      p.closing?fmtFull(p.closing[0]):'',p.closing?fmtFull(p.closing[1]):'']);
+  });
+  const ws2=XLSX.utils.aoa_to_sheet(fazRows);ws2['!cols']=[28,10,48,32,28,32,12,12,12,12,12].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws2,'Kampanya Fazlari');
+
+  // S3 Rakip
+  const cR=[['Baslangic','Bitis','Sure','Rakip Donemi','Etkilenen Haftalar']];
+  getCompetitorZones(year).forEach(z=>{
+    const s=parseDate(z.start),e=parseDate(z.end),days=Math.round((e-s)/86400000)+1;
+    const aff=weeks.filter(w=>parseDate(z.start)<=w.end&&parseDate(z.end)>=w.start).map(w=>`W${w.weekNum}`).join(', ');
+    cR.push([fmt(s),fmt(e),days,z.label,aff]);
+  });
+  const ws3=XLSX.utils.aoa_to_sheet(cR);ws3['!cols']=[12,12,8,50,25].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws3,'Rakip Zonlari');
+
+  // S4 012
+  const c4=[['Baslangic','Bitis','Sure','012 Rakip Donemi','Etkilenen Haftalar']];
+  getCompetitor012Zones(year).forEach(z=>{
+    const s=parseDate(z.start),e=parseDate(z.end),days=Math.round((e-s)/86400000)+1;
+    const aff=weeks.filter(w=>parseDate(z.start)<=w.end&&parseDate(z.end)>=w.start).map(w=>`W${w.weekNum}`).join(', ');
+    c4.push([fmt(s),fmt(e),days,z.label,aff]);
+  });
+  const ws4=XLSX.utils.aoa_to_sheet(c4);ws4['!cols']=[12,12,8,52,25].map(w=>({wch:w}));
+  XLSX.utils.book_append_sheet(wb,ws4,'012 Rakip Zonlari');
+
+  XLSX.writeFile(wb,`Benetton_TR_Retail_Calendar_${year}.xlsx`);
+}
+
+// Also update phase toggle when layer changes
+document.getElementById('editLayer').addEventListener('change',togglePhaseFields);
+
+// ─── JSON PAYLAŞ / YÜKLE ──────────────────────
+
+function exportJSON(){
+  const year = getCurrentYear();
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedBy: '',
+    year,
+    phases: currentPhases,
+    events: currentEvents,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+  a.href = url;
+  a.download = `Benetton_Calendar_${year}_${dateStr}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Dosya indirildi — ekiple paylaşabilirsin 📤','green');
+}
+
+function importJSON(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.phases || !data.events || !data.year){
+        showToast('Geçersiz dosya formatı','red');
+        return;
+      }
+      const year = data.year;
+      currentPhases = data.phases;
+      currentEvents = data.events;
+      saveToStorage(year, currentPhases, currentEvents);
+      // Yılı da güncelle
+      document.getElementById('yearSelect').value = year;
+      renderCalendar();
+      const exportedAt = data.exportedAt ? new Date(data.exportedAt).toLocaleString('tr-TR') : '';
+      showToast(`Yüklendi ✓  ${exportedAt ? '— '+exportedAt : ''}`, 'green');
+    } catch(err){
+      showToast('Dosya okunamadı: ' + err.message, 'red');
+    }
+    // Input'u sıfırla, aynı dosya tekrar seçilebilsin
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─── INIT ─────────────────────────────────────
+function init(){
+  const year=getCurrentYear();
+  loadYear(year);
+  renderCalendar();
+}
+
+document.getElementById('yearSelect').addEventListener('change',()=>{
+  const year=getCurrentYear();
+  loadYear(year);
+  renderCalendar();
+});
+
+init();
+</script>
+</body>
+</html>
